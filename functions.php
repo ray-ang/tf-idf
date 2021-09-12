@@ -30,7 +30,6 @@ function preproc($text) {
 		}
 	}
 
-	$tokens = array_unique($tokens); // remove duplicates
 	return $tokens;
 }
 
@@ -60,27 +59,40 @@ function tf_idtf_total($input, $topic_terms, $threshold) {
 
 	$num_tokens = count($input_tokens);
 	$total_subtopics = count($term_tokens);
-	$threshold = $threshold / $num_tokens; // normalized threshold
+	$distinct_tokens = array_unique($input_tokens);
+	$num_distinct_tokens = count($distinct_tokens);
+	
+	$threshold = $threshold / $num_distinct_tokens; // normalized threshold
 
-	$tf_idtf = 0;
 	$tf_array = array();
 	foreach ($term_tokens as $key => $value) {
-		$tf_t = 0;
+		$tf_n = 0;
+		$tf_idtf = 0;
 		foreach ($value as $term) {
-			if (in_array($term, $input_tokens)) {
-				$num_subtopics = 0;
-				foreach ($term_tokens as $ky => $val) {
-					if (in_array($term, $val)) {
-						$num_subtopics += 1;
-					}
-				}
+			$tf_raw = 0;
+			if (in_array($term, $input_tokens)) { // raw TF
+				$tf_raw = array_count_values($input_tokens)[$term];
+			}
 
-				$tf_t += 1 / $num_tokens; // Total normalized TF
-				$tf_idtf += (1 / $num_tokens) * (log10($total_subtopics / $num_subtopics)); // Total TF-IDtF
+			$num_subtopics = 0;
+			foreach ($term_tokens as $ky => $val) {
+				if (in_array($term, $val)) {
+					$num_subtopics += 1;
+				}
+			}
+
+			$tf_n += $tf_raw / $num_tokens; // Total normalized TF
+			$tf_idtf += ($tf_raw / $num_tokens) * (log10($total_subtopics / $num_subtopics)); // Total TF-IDtF
+		}
+
+		$input_count = 0;
+		foreach ($distinct_tokens as $input) { // count distinct input in term document
+			if (in_array($input, $value)) {
+				$input_count += 1;
 			}
 		}
 
-		if ($tf_t >= $threshold) { // signal detection
+		if ( ($input_count/$num_distinct_tokens) >= $threshold ) { // signal detection
 			$tf_array[$key] = $tf_idtf; // recommended topics
 		}
 	}
