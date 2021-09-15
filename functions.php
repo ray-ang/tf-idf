@@ -34,7 +34,7 @@ function preproc($text) {
 }
 
 /**
- * Term Frequency Threshold (TFT)
+ * TF-IDF using Term Documents with Threshold (TF-IDtF-T)
  *
  * @param string $input      - document or input message
  * @param array $topic_terms - collection of topic terms
@@ -49,13 +49,11 @@ function tf_idtf_total($input, $topic_terms, $threshold) {
 	if (! is_integer($threshold) || $threshold < 0) return '$threshold parameter should be a positive integer.';
 
 	$input_tokens = preproc($input); // preprocess input
-	ksort($input_tokens);
 
 	$term_tokens = array();
 	foreach ($topic_terms as $key => $value) { // preprocess topic terms
 		$term_tokens[$key] = preproc($value);
 	}
-	ksort($term_tokens);
 
 	$num_tokens = count($input_tokens);
 	$total_subtopics = count($term_tokens);
